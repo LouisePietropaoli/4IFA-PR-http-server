@@ -23,3 +23,7 @@ Connection closed by foreign host.
 Test depuis le navigateur :
 
 http://localhost:3000/
+
+
+Test depuis Postman :
+GET localhost:3000
