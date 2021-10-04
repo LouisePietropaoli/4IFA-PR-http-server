@@ -56,22 +56,19 @@ public class WebServer {
             requestBuilder.append(line + "\r\n");
         }
 
-        parseRequest(client, requestBuilder);
         try {
+            parseRequest(client, requestBuilder);
             sendResponse(client, requestBuilder);
         } catch (IOException e)
         {
-            System.err.println("SendResponse: " + e);
-        }
-        try {
-            sendResponse(client, requestBuilder);
-        } catch (IOException e)
-        {
-            System.err.println("SendResponse: " + e);
+            System.err.println("Error: " + e);
+        } finally {
+            client.close();
         }
 
         String request = requestBuilder.toString();
         System.out.println(request);
+
     }
 
     private static void parseRequest(Socket client, StringBuilder requestBuilder) {
@@ -103,7 +100,6 @@ public class WebServer {
         clientOutput.write("<b>It works!</b>".getBytes());
         clientOutput.write("\r\n\r\n".getBytes());
         clientOutput.flush();
-        client.close();
     }
 
     /**
