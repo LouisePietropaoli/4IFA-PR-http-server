@@ -33,6 +33,7 @@ public class WebServer {
             try {
                 // wait for a connection and create new socket for client
                 Socket remoteClientSocket = serverSocket.accept();
+
                 handleRequest(remoteClientSocket);
             } catch (Exception e) {
                 System.out.println("Error: " + e);
@@ -51,14 +52,12 @@ public class WebServer {
         // create request builder to send response
         StringBuilder requestBuilder = new StringBuilder();
         String line;
-        while ((line = br.readLine()) != null) {
-            StringTokenizer parsedRequest = new StringTokenizer(line);
-            if(!line.isBlank())
-                requestBuilder.append(line + "\r\n");
+        while (!(line = br.readLine()).isBlank()) {
+            requestBuilder.append(line + "\r\n");
         }
         Request httpRequest = parseRequest(client, requestBuilder);
         //create new thread
-        new RequestThread(httpRequest, client);
+        new RequestThread(httpRequest, client).start();
 
 
 
