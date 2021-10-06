@@ -6,12 +6,22 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WebServer {
     static int PORT_NUMBER = 3000;
     static String HOST = "localhost";
+    static String STATUS_OK = "200 OK";
+    static String STATUS_ERROR = "404 Not Found";
+    String method;
+    String path;
+    String version;
+    String host;
+    List<String> headers;
 
     /**
      * WebServer constructor.
@@ -41,7 +51,7 @@ public class WebServer {
         }
     }
 
-    private static void handleClient(Socket client) throws IOException {
+    private void handleClient(Socket client) throws IOException {
         System.out.println("Connection, sending data : " +  client.toString());
 
         // create reader to read client request from client's socket
@@ -58,7 +68,9 @@ public class WebServer {
 
         try {
             parseRequest(client, requestBuilder);
-            sendResponse(client, requestBuilder);
+            Path filePath = buildResourceFilePath(path);
+            String contentType = getContentType(filePath);
+            sendResponse(client, STATUS_OK, contentType, Files.readAllBytes(filePath), requestBuilder);
         } catch (IOException e)
         {
             System.err.println("Error: " + e);
@@ -71,16 +83,16 @@ public class WebServer {
 
     }
 
-    private static void parseRequest(Socket client, StringBuilder requestBuilder) {
+    private void parseRequest(Socket client, StringBuilder requestBuilder) {
         String request = requestBuilder.toString();
         String[] requestsLines = request.split("\r\n");
         String[] requestLine = requestsLines[0].split(" ");
-        String method = requestLine[0];
-        String path = requestLine[1];
-        String version = requestLine[2];
-        String host = requestsLines[1].split(" ")[1];
+        method = requestLine[0];
+        path = requestLine[1];
+        version = requestLine[2];
+        host = requestsLines[1].split(" ")[1];
 
-        List<String> headers = new ArrayList<>();
+        headers = new ArrayList<>();
         //headers starts with 3rd line of the request
         for (int h = 2; h < requestsLines.length; h++) {
             String header = requestsLines[h];
@@ -92,14 +104,25 @@ public class WebServer {
         System.out.println(accessLog);
     }
 
-    private static void sendResponse(Socket client, StringBuilder requestBuilder) throws IOException {
+    private void sendResponse(Socket client, String status, String contentType, byte[] content, StringBuilder requestBuilder) throws IOException {
         OutputStream clientOutput = client.getOutputStream();
-        clientOutput.write("HTTP/1.1 200 OK\r\n".getBytes());
-        clientOutput.write(("ContentType: text/html\r\n").getBytes());
+        clientOutput.write(("HTTP/1.1 \r\n" + status).getBytes());
+        clientOutput.write(("ContentType: " + contentType + "\r\n").getBytes());
         clientOutput.write("\r\n".getBytes());
-        clientOutput.write("<b>It works!</b>".getBytes());
+        clientOutput.write(content);
         clientOutput.write("\r\n\r\n".getBytes());
         clientOutput.flush();
+        client.close();
+    }
+
+    private String getContentType(Path filePath) throws IOException {
+        return Files.probeContentType(filePath);
+    }
+
+    private Path buildResourceFilePath(String path) {
+        System.out.println("PATH===============" + path);
+        if(path.equals("/")) path = "index.html";
+        return Paths.get("doc/", path);
     }
 
     /**
