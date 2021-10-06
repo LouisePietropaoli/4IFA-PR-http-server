@@ -94,6 +94,13 @@ public class WebServer {
         String[] requestsLines = request.split("\r\n");
         String[] requestLine = requestsLines[0].split(" ");
         method = requestLine[0];
+
+        switch (method) {
+            case "GET" -> System.out.println("Get method is used");
+            case "POST" -> System.out.println("Get method is used");
+            case "PUT" -> System.out.println("Get method is used");
+            case "DELETE" -> System.out.println("Get method is used");
+        }
         path = requestLine[1];
         version = requestLine[2];
         host = requestsLines[1].split(" ")[1];
