@@ -3,22 +3,14 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.StringTokenizer;
 
 public class WebServer {
 
     static int PORT_NUMBER = 3001;
-    static String HOST = "localhost";
-    static String STATUS_OK = "200 OK";
-    static String STATUS_ERROR = "404 Not Found";
-    Request httpRequest;
 
     /**
      * WebServer constructor.
@@ -41,15 +33,15 @@ public class WebServer {
             try {
                 // wait for a connection and create new socket for client
                 Socket remoteClientSocket = serverSocket.accept();
-                httpRequest = new Request();
-                handleClient(remoteClientSocket);
+
+                handleRequest(remoteClientSocket);
             } catch (Exception e) {
                 System.out.println("Error: " + e);
             }
         }
     }
 
-    synchronized private void handleClient(Socket client) throws IOException {
+    private void handleRequest(Socket client) throws IOException {
         System.out.println("Connection, sending data : " +  client.toString());
 
         // create reader to read client request from client's socket
@@ -63,39 +55,20 @@ public class WebServer {
         while (!(line = br.readLine()).isBlank()) {
             requestBuilder.append(line + "\r\n");
         }
+        Request httpRequest = parseRequest(client, requestBuilder);
+        //create new thread
+        new RequestThread(httpRequest, client).start();
 
-        try {
-            parseRequest(client, requestBuilder);
-            Path filePath = buildResourceFilePath(httpRequest.getPath());
-            if (Files.exists(filePath)) {
-                httpRequest.setContentType(getContentType(filePath));
-                httpRequest.setStatus(STATUS_OK);
-                httpRequest.setContent(Files.readAllBytes(filePath));
-                //sendResponse(client, httpRequest.getMethod().getMethodByIdentifier(method), STATUS_OK, contentType, Files.readAllBytes(filePath));
-                sendResponse(client);
-            } else {
-                byte[] notFoundContent = "<h1> Not found :-( </h1>".getBytes();
-                httpRequest.setContent(notFoundContent);
-                httpRequest.setContentType("text/html");
-                httpRequest.setStatus(STATUS_ERROR);
-                sendResponse(client);
 
-            }
-        } catch (IOException e)
-        {
-            System.err.println("Error: " + e);
-        } finally {
-            client.close();
-        }
-
-        String request = requestBuilder.toString();
-        System.out.println(request);
 
     }
 
-    private void parseRequest(Socket client, StringBuilder requestBuilder) {
+    private Request parseRequest(Socket client, StringBuilder requestBuilder) {
+        Request httpRequest = new Request();
         String request = requestBuilder.toString();
+        //split each request line
         String[] requestsLines = request.split("\r\n");
+        //split first line which contains method, version, resource
         String[] requestLine = requestsLines[0].split(" ");
 
         httpRequest.setMethod(Request.Method.getMethodByIdentifier(requestLine[0]));
@@ -119,39 +92,8 @@ public class WebServer {
                 httpRequest.getHost(),
                 httpRequest.getHeaders().toString());
         System.out.println(accessLog);
-    }
 
-    private void sendResponse(Socket client) throws IOException {
-
-
-        switch (httpRequest.getMethod().toString()) {
-            case "GET" -> sendGetResponse(client);
-            case "POST" -> System.out.println("dsfsd method is used");
-            case "PUT" -> System.out.println("Get methsdfdsfod is used");
-            case "DELETE" -> System.out.println("Get mesdthod is used");
-        }
-
-        client.close();
-    }
-
-    private void sendGetResponse(Socket client) throws IOException {
-        OutputStream clientOutput = client.getOutputStream();
-        clientOutput.write(("HTTP/1.1 \r\n" + httpRequest.getStatus()).getBytes());
-        clientOutput.write(("ContentType: " + httpRequest.getContentType() + "\r\n").getBytes());
-        clientOutput.write("\r\n".getBytes());
-        clientOutput.write(httpRequest.getContent());
-        clientOutput.write("\r\n\r\n".getBytes());
-        clientOutput.flush();
-    }
-
-    private String getContentType(Path filePath) throws IOException {
-        return Files.probeContentType(filePath);
-    }
-
-    private Path buildResourceFilePath(String path) {
-        System.out.println("PATH===============" + path);
-        if(path.equals("/")) path = "index.html";
-        return Paths.get("doc/", path);
+        return httpRequest;
     }
 
     /**
