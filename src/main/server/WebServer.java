@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebServer {
-    static int PORT_NUMBER = 3000;
+    static int PORT_NUMBER = 3001;
     static String HOST = "localhost";
     static String STATUS_OK = "200 OK";
     static String STATUS_ERROR = "404 Not Found";
@@ -69,8 +69,14 @@ public class WebServer {
         try {
             parseRequest(client, requestBuilder);
             Path filePath = buildResourceFilePath(path);
-            String contentType = getContentType(filePath);
-            sendResponse(client, STATUS_OK, contentType, Files.readAllBytes(filePath), requestBuilder);
+            if (Files.exists(filePath)) {
+                String contentType = getContentType(filePath);
+                sendResponse(client, STATUS_OK, contentType, Files.readAllBytes(filePath));
+            } else {
+                byte[] notFoundContent = "<h1> Not found :-( </h1>".getBytes();
+                sendResponse(client, STATUS_ERROR, "text/html", notFoundContent);
+
+            }
         } catch (IOException e)
         {
             System.err.println("Error: " + e);
@@ -104,7 +110,7 @@ public class WebServer {
         System.out.println(accessLog);
     }
 
-    private void sendResponse(Socket client, String status, String contentType, byte[] content, StringBuilder requestBuilder) throws IOException {
+    private void sendResponse(Socket client, String status, String contentType, byte[] content) throws IOException {
         OutputStream clientOutput = client.getOutputStream();
         clientOutput.write(("HTTP/1.1 \r\n" + status).getBytes());
         clientOutput.write(("ContentType: " + contentType + "\r\n").getBytes());
