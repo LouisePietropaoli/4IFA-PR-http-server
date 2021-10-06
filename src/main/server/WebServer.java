@@ -24,6 +24,13 @@ public class WebServer {
         Method(String identifier) {
             this.identifier = identifier;
         }
+
+        public static Method getMethodByIdentifier(String identifier) {
+            for(Method e : values()) {
+                if(e.identifier.equals(identifier)) return e;
+            }
+            return GET;
+        }
     };
 
     static int PORT_NUMBER = 3001;
@@ -84,10 +91,10 @@ public class WebServer {
             Path filePath = buildResourceFilePath(path);
             if (Files.exists(filePath)) {
                 String contentType = getContentType(filePath);
-                sendResponse(client, , STATUS_OK, contentType, Files.readAllBytes(filePath));
+                sendResponse(client, Method.getMethodByIdentifier(method), STATUS_OK, contentType, Files.readAllBytes(filePath));
             } else {
                 byte[] notFoundContent = "<h1> Not found :-( </h1>".getBytes();
-                sendResponse(client, STATUS_ERROR, "text/html", notFoundContent);
+                sendResponse(client, Method.getMethodByIdentifier(method), STATUS_ERROR, "text/html", notFoundContent);
 
             }
         } catch (IOException e)
