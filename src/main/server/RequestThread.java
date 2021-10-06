@@ -29,16 +29,6 @@ public class RequestThread extends Thread {
     private void handleClient() throws IOException {
         System.out.println("Connection, sending data : " +  client.toString());
 
-        // create reader to read client request from client's socket
-        BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-        // create request builder to send response
-        StringBuilder requestBuilder = new StringBuilder();
-        String line;
-        while (!(line = br.readLine()).isBlank()) {
-            requestBuilder.append(line + "\r\n");
-        }
-
         try {
             Path filePath = buildResourceFilePath(httpRequest.getPath());
             if (Files.exists(filePath)) {
@@ -60,9 +50,6 @@ public class RequestThread extends Thread {
         } finally {
             client.close();
         }
-
-        String request = requestBuilder.toString();
-        System.out.println(request);
     }
 
     private void sendResponse(Socket client) throws IOException {
