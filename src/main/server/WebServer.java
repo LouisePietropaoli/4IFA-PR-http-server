@@ -13,6 +13,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WebServer {
+    private enum Method {
+        GET("GET"),
+        POST("POST"),
+        HEAD("HEAD"),
+        PUT("PUT"),
+        DELETE("DELETE");
+
+        private final String identifier;
+        Method(String identifier) {
+            this.identifier = identifier;
+        }
+
+        public static Method getMethodByIdentifier(String identifier) {
+            for(Method e : values()) {
+                if(e.identifier.equals(identifier)) return e;
+            }
+            return GET;
+        }
+    };
+
     static int PORT_NUMBER = 3001;
     static String HOST = "localhost";
     static String STATUS_OK = "200 OK";
@@ -71,10 +91,10 @@ public class WebServer {
             Path filePath = buildResourceFilePath(path);
             if (Files.exists(filePath)) {
                 String contentType = getContentType(filePath);
-                sendResponse(client, STATUS_OK, contentType, Files.readAllBytes(filePath));
+                sendResponse(client, Method.getMethodByIdentifier(method), STATUS_OK, contentType, Files.readAllBytes(filePath));
             } else {
                 byte[] notFoundContent = "<h1> Not found :-( </h1>".getBytes();
-                sendResponse(client, STATUS_ERROR, "text/html", notFoundContent);
+                sendResponse(client, Method.getMethodByIdentifier(method), STATUS_ERROR, "text/html", notFoundContent);
 
             }
         } catch (IOException e)
@@ -117,7 +137,7 @@ public class WebServer {
         System.out.println(accessLog);
     }
 
-    private void sendResponse(Socket client, String status, String contentType, byte[] content) throws IOException {
+    private void sendResponse(Socket client, Method method, String status, String contentType, byte[] content) throws IOException {
         OutputStream clientOutput = client.getOutputStream();
         clientOutput.write(("HTTP/1.1 \r\n" + status).getBytes());
         clientOutput.write(("ContentType: " + contentType + "\r\n").getBytes());
