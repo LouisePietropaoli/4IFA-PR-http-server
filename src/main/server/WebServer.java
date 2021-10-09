@@ -1,12 +1,13 @@
 ///A Simple Web Server (WebServer.java)
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class WebServer {
 
@@ -50,12 +51,23 @@ public class WebServer {
         //PrintWriter out = new PrintWriter(remote.getOutputStream());
 
         // create request builder to send response
-        StringBuilder requestBuilder = new StringBuilder();
+        StringBuilder headersBuilder = new StringBuilder();
         String line;
         while (!(line = br.readLine()).isBlank()) {
-            requestBuilder.append(line + "\r\n");
+            headersBuilder.append(line + "\r\n");
         }
-        Request httpRequest = parseRequest(client, requestBuilder);
+
+        StringBuilder bodyBuilder = new StringBuilder();
+        while(br.ready()) {
+
+            // converts int to character
+            char c = (char)br.read();
+
+            // prints character
+            System.out.println(c);
+            bodyBuilder.append(c);
+        }
+        Request httpRequest = parseRequest(client, headersBuilder, bodyBuilder);
         //create new thread
         new RequestThread(httpRequest, client).start();
 
@@ -63,9 +75,9 @@ public class WebServer {
 
     }
 
-    private Request parseRequest(Socket client, StringBuilder requestBuilder) {
+    private Request parseRequest(Socket client, StringBuilder headersBuilder, StringBuilder bodyBuilder) {
         Request httpRequest = new Request();
-        String request = requestBuilder.toString();
+        String request = headersBuilder.toString();
         //split each request line
         String[] requestsLines = request.split("\r\n");
         //split first line which contains method, version, resource
@@ -83,6 +95,11 @@ public class WebServer {
             headers.add(header);
         }
         httpRequest.setHeaders(headers);
+        if(!bodyBuilder.isEmpty())
+            httpRequest.setBody(new JSONObject(bodyBuilder.toString()));
+        else
+            httpRequest.setBody(new JSONObject());
+
 
         String accessLog = String.format("Client %s, method %s, path %s, version %s, host %s, headers %s",
                 client.toString(),

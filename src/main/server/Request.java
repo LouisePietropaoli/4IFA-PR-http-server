@@ -1,6 +1,8 @@
 import java.util.List;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.json.JSONObject;
 
 @Data
 @NoArgsConstructor
@@ -37,4 +39,5 @@ public class Request {
     private String contentType;
     private String status;
     private byte[] content;
+    private JSONObject body;
 }

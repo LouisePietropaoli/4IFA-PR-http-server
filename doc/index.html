@@ -1,9 +1,36 @@
 <html>
 <header>
     <title>My homepage!</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="submitForm.js"></script>
 </header>
 <body>
-<h1>Welcome!</h1>
-<p><a href="gallery.html">Here</a> you can look at my pictures</p>
+
+<div class="container">
+    <h1>Welcome!</h1>
+
+    <p><a href="persons.txt" charset="utf-8">Here</a> You can look at the users list.</p>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+            <label for="age">Age</label>
+            <input type="number" class="form-control" id="age" placeholder="Enter your Age">
+        </div>
+        <button type="submit" class="btn btn-primary">Add user</button>
+    </form>
+
+</div><!-- /.container -->
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
 </body>
 </html>
