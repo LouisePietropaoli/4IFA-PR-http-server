@@ -1,10 +1,13 @@
 import lombok.SneakyThrows;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class RequestThread extends Thread {
     static String STATUS_OK = "200 OK";
@@ -24,24 +27,15 @@ public class RequestThread extends Thread {
     }
 
     private void handleClient() throws IOException {
-        System.out.println("Connection, sending data : " +  client.toString());
-
         try {
-            Path filePath = buildResourceFilePath(httpRequest.getPath());
-            if (Files.exists(filePath)) {
-                httpRequest.setContentType(getContentType(filePath));
-                httpRequest.setStatus(STATUS_OK);
-                httpRequest.setContent(Files.readAllBytes(filePath));
-                sendResponse(client);
-            } else {
-                byte[] notFoundContent = "<h1> Not found :-( </h1>".getBytes();
-                httpRequest.setContent(notFoundContent);
-                httpRequest.setContentType("text/html");
-                httpRequest.setStatus(STATUS_ERROR);
-                sendResponse(client);
-
+            System.out.println("Connection, sending data : " + client.toString());
+            switch (httpRequest.getMethod().toString()) {
+                case "GET" -> sendGetResponse(client);
+                case "POST" -> sendPostResponse();
+                case "PUT" -> System.out.println("Get methsdfdsfod is used");
+                case "DELETE" -> System.out.println("Get mesdthod is used");
             }
-        } catch (IOException e)
+        } catch (Exception e)
         {
             System.err.println("Error: " + e);
         } finally {
@@ -60,36 +54,83 @@ public class RequestThread extends Thread {
         }
     }
 
+    /**
+     * Get a resource on the server
+     */
     private void sendGetResponse(Socket client) throws IOException {
+        Path filePath = buildResourceFilePath(httpRequest.getPath());
         OutputStream clientOutput = client.getOutputStream();
-        clientOutput.write(("HTTP/1.1 \r\n" + httpRequest.getStatus()).getBytes());
-        clientOutput.write(("ContentType: " + httpRequest.getContentType() + "\r\n").getBytes());
-        clientOutput.write("\r\n".getBytes());
-        clientOutput.write(httpRequest.getContent());
-        clientOutput.write("\r\n\r\n".getBytes());
-        clientOutput.flush();
+
+        if (Files.exists(filePath)) {
+            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
+            clientOutput.write(("ContentType: " + httpRequest.getContentType() + "\r\n").getBytes());
+            clientOutput.write("\r\n".getBytes());
+            clientOutput.write(Files.readAllBytes(filePath));
+            clientOutput.write("\r\n\r\n".getBytes());
+            clientOutput.flush();
+        } else {
+            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_ERROR).getBytes());
+            clientOutput.write(("ContentType: text/html\r\n").getBytes());
+            clientOutput.write("\r\n".getBytes());
+            clientOutput.write("<h1> Not found :-( </h1>".getBytes());
+            clientOutput.write("\r\n\r\n".getBytes());
+            clientOutput.flush();
+        }
+
     }
 
+    /**
+     * either save a new person in file "persons.txt"
+     * or save a binary file sent
+     * @throws IOException
+     */
     protected void sendPostResponse() throws IOException {
-        String fileName = "doc/persons.txt";
+        if (httpRequest.getContentType().equals("application/json")) {
+            String fileName = "doc/persons.txt";
 
-        String name = (String) httpRequest.getBody().get("name");
-        String age = (String) httpRequest.getBody().get("age");
+            JSONObject jsonObject = new JSONObject(httpRequest.getBody());
+            String name = (String) jsonObject.get("name");
+            String age = (String) jsonObject.get("age");
 
-        // Calling the above method
-        appendStrToFile(fileName, "\n" + name + ": " + age + " years old");
+            appendStrToFile(fileName, "\n" + name + ": " + age + " years old");
 
-        OutputStream clientOutput = client.getOutputStream();
-        clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
-        clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
-        clientOutput.write("\r\n".getBytes());
-        clientOutput.write(("<h1>User <b>" + name + "</b> was added ! </h1>").getBytes());
-        clientOutput.write("\r\n\r\n".getBytes());
-        clientOutput.flush();
+            OutputStream clientOutput = client.getOutputStream();
+            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
+            clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
+            clientOutput.write("\r\n".getBytes());
+            clientOutput.write(("<h1>User <b>" + name + "</b> was added ! </h1>").getBytes());
+            clientOutput.write("\r\n\r\n".getBytes());
+            clientOutput.flush();
+        } else {
+            String fileName = "doc/File-" + new SimpleDateFormat("ddMMyy-hhmmss.SSS").format( new Date() ) + getFileExtension();
+            File outputFile = new File(fileName);
+            OutputStream outputStream = new FileOutputStream(outputFile);
+            outputStream.write(httpRequest.getBody().getBytes());
+
+            OutputStream clientOutput = client.getOutputStream();
+            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
+            clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
+            clientOutput.write("\r\n".getBytes());
+            clientOutput.write(("<h1>File was saved on the server with name :  <b>" + fileName + "</b></h1>").getBytes());
+            clientOutput.write("\r\n\r\n".getBytes());
+            clientOutput.flush();
+        }
     }
 
-    private String getContentType(Path filePath) throws IOException {
-        return Files.probeContentType(filePath);
+    private String getFileExtension() {
+        String extension;
+        switch (httpRequest.getContentType()) {
+            case "application/json" -> extension = ".json";
+            case "text/html" -> extension = ".html";
+            case "text/plain" -> extension = ".txt";
+            case "image/png" -> extension = ".png";
+            case "image/jpg" -> extension = ".jpg";
+            case "image/jpeg" -> extension = ".jpeg";
+            case "image/gif" -> extension = ".gif";
+            default -> extension =  "";
+        }
+
+        return extension;
     }
 
     private Path buildResourceFilePath(String path) {
@@ -97,8 +138,6 @@ public class RequestThread extends Thread {
         return Paths.get("doc/", path);
     }
 
-    // Method 1
-    // TO append string into a file
     public static void appendStrToFile(String fileName,
                                        String str)
     {
