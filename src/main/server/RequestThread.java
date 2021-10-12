@@ -32,7 +32,7 @@ public class RequestThread extends Thread {
             switch (httpRequest.getMethod().toString()) {
                 case "GET" -> sendGetResponse();
                 case "POST" -> sendPostResponse();
-                case "PUT" -> System.out.println("Get methsdfdsfod is used");
+                case "PUT" -> sendPutResponse();
                 case "DELETE" -> sendDeleteResponse();
             }
         } catch (Exception e)
@@ -107,6 +107,34 @@ public class RequestThread extends Thread {
     }
 
     /**
+     * update file
+     * @throws IOException
+     */
+    protected void sendPutResponse() throws IOException {
+
+        String fileName = "doc" + httpRequest.getPath();
+        File outputFile = new File(fileName);
+        OutputStream clientOutput = client.getOutputStream();
+
+        if (outputFile.exists()) {
+                OutputStream outputStream = new FileOutputStream(outputFile);
+                outputStream.write(httpRequest.getBody().getBytes());
+
+                clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
+                clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
+                clientOutput.write("\r\n".getBytes());
+                clientOutput.write(("<h1>File with name <b>fileName</b> was updated on the server.</h1>").getBytes());
+                clientOutput.write("\r\n\r\n".getBytes());
+                clientOutput.flush();
+        } else {
+            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_ERROR).getBytes());
+            clientOutput.write(("ContentType: text/html\r\n").getBytes());
+            clientOutput.write("\r\n".getBytes());
+            clientOutput.write("<h1> File was not found :-( </h1>".getBytes());
+        }
+    }
+
+    /**
      * Delete - if exists - a resource on the server
      */
     private void sendDeleteResponse() throws IOException {
@@ -115,24 +143,20 @@ public class RequestThread extends Thread {
 
         OutputStream clientOutput = client.getOutputStream();
 
-        if(filePath.delete())
-        {
+        if(filePath.delete()) {
             clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
             clientOutput.write(("ContentType: " + httpRequest.getContentType() + "\r\n").getBytes());
             clientOutput.write("\r\n".getBytes());
             clientOutput.write(("<h1>File with name :  <b>" + fileName + "</b>was deleted on the server.</h1>").getBytes());
-            clientOutput.write("\r\n\r\n".getBytes());
-            clientOutput.flush();
         }
-        else
-        {
+        else {
             clientOutput.write(("HTTP/1.1 \r\n" + STATUS_ERROR).getBytes());
             clientOutput.write(("ContentType: text/html\r\n").getBytes());
             clientOutput.write("\r\n".getBytes());
             clientOutput.write("<h1> File was not found :-( </h1>".getBytes());
-            clientOutput.write("\r\n\r\n".getBytes());
-            clientOutput.flush();
         }
+        clientOutput.write("\r\n\r\n".getBytes());
+        clientOutput.flush();
     }
 
     private String getFileExtension() {
