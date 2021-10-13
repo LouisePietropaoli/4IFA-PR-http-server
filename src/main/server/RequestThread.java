@@ -106,7 +106,7 @@ public class RequestThread extends Thread {
                 clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
                 clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
                 clientOutput.write("\r\n".getBytes());
-                clientOutput.write(("<h1>File with name <b>fileName</b> was updated on the server.</h1>").getBytes());
+                clientOutput.write(("<h1>File with name <b>" + fileName + "</b> was updated on the server.</h1>").getBytes());
                 clientOutput.write("\r\n\r\n".getBytes());
                 clientOutput.flush();
         } else {
