@@ -74,36 +74,19 @@ public class RequestThread extends Thread {
      * @throws IOException
      */
     protected void sendPostResponse() throws IOException {
-        if (httpRequest.getContentType().equals("application/json")) {
-            String fileName = "doc/persons.txt";
+        String fileName = "doc/File-" + new SimpleDateFormat("ddMMyy-hhmmss.SSS").format( new Date() ) + getFileExtension();
+        File outputFile = new File(fileName);
+        OutputStream outputStream = new FileOutputStream(outputFile);
+        outputStream.write(httpRequest.getBody().getBytes());
 
-            JSONObject jsonObject = new JSONObject(httpRequest.getBody());
-            String name = (String) jsonObject.get("name");
-            String age = (String) jsonObject.get("age");
+        OutputStream clientOutput = client.getOutputStream();
+        clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
+        clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
+        clientOutput.write("\r\n".getBytes());
+        clientOutput.write(("<h1>File was saved on the server with name :  <b>" + fileName + "</b></h1>").getBytes());
+        clientOutput.write("\r\n\r\n".getBytes());
+        clientOutput.flush();
 
-            appendStrToFile(fileName, "\n" + name + ": " + age + " years old");
-
-            OutputStream clientOutput = client.getOutputStream();
-            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
-            clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
-            clientOutput.write("\r\n".getBytes());
-            clientOutput.write(("<h1>User <b>" + name + "</b> was added ! </h1>").getBytes());
-            clientOutput.write("\r\n\r\n".getBytes());
-            clientOutput.flush();
-        } else {
-            String fileName = "doc/File-" + new SimpleDateFormat("ddMMyy-hhmmss.SSS").format( new Date() ) + getFileExtension();
-            File outputFile = new File(fileName);
-            OutputStream outputStream = new FileOutputStream(outputFile);
-            outputStream.write(httpRequest.getBody().getBytes());
-
-            OutputStream clientOutput = client.getOutputStream();
-            clientOutput.write(("HTTP/1.1 \r\n" + STATUS_OK).getBytes());
-            clientOutput.write(("ContentType: text/html" + "\r\n").getBytes());
-            clientOutput.write("\r\n".getBytes());
-            clientOutput.write(("<h1>File was saved on the server with name :  <b>" + fileName + "</b></h1>").getBytes());
-            clientOutput.write("\r\n\r\n".getBytes());
-            clientOutput.flush();
-        }
     }
 
     /**
@@ -178,30 +161,5 @@ public class RequestThread extends Thread {
     private Path buildResourceFilePath(String path) {
         if(path.equals("/")) path = "index.html";
         return Paths.get("doc/", path);
-    }
-
-    public static void appendStrToFile(String fileName,
-                                       String str)
-    {
-        // Try block to check for exceptions
-        try {
-
-            // Open given file in append mode by creating an
-            // object of BufferedWriter class
-            BufferedWriter out = new BufferedWriter(
-                    new FileWriter(fileName, true));
-
-            // Writing on output stream
-            out.write(str);
-            // Closing the connection
-            out.close();
-        }
-
-        // Catch block to handle the exceptions
-        catch (IOException e) {
-
-            // Display message when exception occurs
-            System.out.println("exception occoured" + e);
-        }
     }
 }
