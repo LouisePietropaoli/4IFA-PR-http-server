@@ -31,6 +31,29 @@ public class Request {
         }
     };
 
+    public enum ContentType {
+        TEXT("text/plain"),
+        JSON("application/json"),
+        HTML("text/html"),
+        NONE("none");
+
+        private final String identifier;
+        ContentType(String identifier) {
+            this.identifier = identifier;
+        }
+
+        public String toString() {
+            return this.identifier;
+        }
+
+        public static ContentType getContentTypeByIdentifier(String identifier) {
+            for(ContentType e : values()) {
+                if(e.identifier.equals(identifier)) return e;
+            }
+            return NONE;
+        }
+    };
+
     private Method method;
     private String path;
     private String version;
@@ -39,5 +62,5 @@ public class Request {
     private String contentType;
     private String status;
     private byte[] content;
-    private JSONObject body;
+    private String body;
 }

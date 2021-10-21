@@ -59,20 +59,12 @@ public class WebServer {
 
         StringBuilder bodyBuilder = new StringBuilder();
         while(br.ready()) {
-
-            // converts int to character
             char c = (char)br.read();
-
-            // prints character
-            System.out.println(c);
             bodyBuilder.append(c);
         }
         Request httpRequest = parseRequest(client, headersBuilder, bodyBuilder);
         //create new thread
         new RequestThread(httpRequest, client).start();
-
-
-
     }
 
     private Request parseRequest(Socket client, StringBuilder headersBuilder, StringBuilder bodyBuilder) {
@@ -82,7 +74,14 @@ public class WebServer {
         String[] requestsLines = request.split("\r\n");
         //split first line which contains method, version, resource
         String[] requestLine = requestsLines[0].split(" ");
+        String contentType = "";
+        for (String line : requestsLines) {
+            if (line.startsWith("Content-Type:")) {
+                contentType = line.split(":")[1].substring(1);
+            }
+        }
 
+        httpRequest.setContentType(contentType);
         httpRequest.setMethod(Request.Method.getMethodByIdentifier(requestLine[0]));
         httpRequest.setPath(requestLine[1]);
         httpRequest.setVersion(requestLine[2]);
@@ -95,10 +94,11 @@ public class WebServer {
             headers.add(header);
         }
         httpRequest.setHeaders(headers);
+
         if(!bodyBuilder.isEmpty())
-            httpRequest.setBody(new JSONObject(bodyBuilder.toString()));
+            httpRequest.setBody(bodyBuilder.toString());
         else
-            httpRequest.setBody(new JSONObject());
+            httpRequest.setBody(new String());
 
 
         String accessLog = String.format("Client %s, method %s, path %s, version %s, host %s, headers %s",
