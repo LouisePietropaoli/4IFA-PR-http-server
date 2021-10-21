@@ -1,17 +1,37 @@
 # 4IFA-PR-http-server
+---
 
-*Help tuto *:
-https://dev.to/mateuszjarzyna/build-your-own-http-server-in-java-in-less-than-one-hour-only-get-method-2k02
+## Configurations
+
+Serveur : localhost
+
+Port : 3001
 
 ---
 
+## URLs valides :
+
+***Depuis le navigateur :***
+
+* (GET) http://localhost:3001 : renvoie le fichier index.html
+* (GET) http://localhost:3001/<nom_de_laressource_sur_le_serveur> : renvoie le fichier (html, json, txt, jpeg,...) indiqué (ou page d'erreur si non trouvé)
+
+***Depuis POSTMAN :***
+* GET http://localhost:3001 : renvoie le fichier index.html
+* GET http://localhost:3001/<nom_de_laressource_sur_le_serveur> : renvoie le fichier (html, json, txt, jpeg,...) indiqué (ou page d'erreur si non trouvé)
+* DELETE http://localhost:3001/<nom_de_laressource_sur_le_serveur> : supprime le fichier (html, json, txt, jpeg,...) indiqué sur le serveur
+* PUT http://localhost:3001/<nom_de_laressource_sur_le_serveur> [body=binary --> télécharger le fichier modifié] : met à jour le fichier (html, json, txt) indiqué sur le serveur. Le nom du fichier sur le serveur n'est pas modifié, seul le contenu du fichier est mis à jour.
+* POST http://localhost:3001 : ajoute le fichier (html, json, txt, jpeg,...) sur le serveur avec un nom unique. 
 
 
-**Après avoir démarré le serveur :**
+---
 
-## Test dans un terminal avec telnet :
+## Test du serveur 
 
-```telnet localhost 3000
+***Après avoir démarré le serveur :***
+
+* dans un terminal avec telnet :
+```telnet localhost 3001
 Trying ::1...
 Connected to localhost.
 Escape character is '^]'.
@@ -19,30 +39,12 @@ GET / HTTP/1.1
 Host: localhostHTTP/1.1 200 OK
 ContentType: text/htmlIt works!Connection closed by foreign host.
 ```
-
-Test depuis le navigateur :
+* depuis le navigateur :
 
 `http://localhost:3000/`
 
-Test depuis Postman :
-`GET localhost:3000`
-
+* depuis Postman :
+`GET localhost:3001`
 
 
 ---
-
-
-
-**Questions TP :**
-
-* [ ] Q1
-* [ ] Q2
-* [ ] Q3
-* [ ] Q4
-* [ ] Q5
-* [ ] Q6
-* [ ] Q7
-* [ ] Q8
-* [ ] Q9
-* [ ] Q10
-* [ ] Q11
